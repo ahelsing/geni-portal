@@ -48,16 +48,31 @@ if (!isset($user) || is_null($user) || ! $user->isActive()) {
 }
 include("tool-lookupids.php");
 
-$mpids = get_projects_for_member($sa_url, $user, $user->account_id, false);
+// Used to only get project the user is not in
+// Now get all projects and let next page warn if you are already in the project
+// $mpids = get_projects_for_member($sa_url, $user, $user->account_id, false);
+$pids = get_projects($sa_url, $user);
 
-// Filter out projects for which this user has not already requested to join (nothing pending)
-$rs = get_requests_by_user($sa_url, $user, $user->account_id, CS_CONTEXT_TYPE::PROJECT, null, RQ_REQUEST_STATUS::PENDING);
-$rpids = array();
-foreach ($rs as $request) {
-  $rpids[] = $request[RQ_REQUEST_TABLE_FIELDNAME::CONTEXT_ID];
-}
+// // Filter out projects for which this user has not already requested to join (nothing pending)
+// $rs = get_requests_by_user($sa_url, $user, $user->account_id, CS_CONTEXT_TYPE::PROJECT, null, RQ_REQUEST_STATUS::PENDING);
+// $rpids = array();
+// foreach ($rs as $request) {
+//   $rpids[] = $request[RQ_REQUEST_TABLE_FIELDNAME::CONTEXT_ID];
+// }
 
-$pids = array_diff($mpids, $rpids);
+// $pids = array_diff($mpids, $rpids);
+
+$jointhis_url = "join-this-project.php?project_id=";
+$project_details = lookup_project_details($sa_url, $user, $pids);
+usort($project_details, "project_name_compare");
+//  error_log("PROJ_DETAILS = " . print_r($project_details, true));
+
+$ma_url = get_first_service_of_type(SR_SERVICE_TYPE::MEMBER_AUTHORITY);
+$member_names = lookup_member_names_for_rows($ma_url, $user, 
+					     $project_details, 
+					     PA_PROJECT_TABLE_FIELDNAME::LEAD_ID);
+//  error_log("MEMBER_DETAILS = " . print_r($member_names, true));
+
 show_header('GENI Portal: Projects');
 
 include("tool-breadcrumbs.php");
@@ -85,9 +100,9 @@ print "<p>Once the project lead makes a decision about your request you
 
 if (! isset($pids) || is_null($pids) || count($pids) < 1) {
   print "<p><i>There are no more projects for you to join.</i></p>\n";
-  if (count($rpids) > 0) {
-    print "<p>You have " . count($rpids) . " open <a href='dashboard.php#projects'>request(s) to join a project</a>.</p>";
-  }
+  //  if (count($rpids) > 0) {
+  //    print "<p>You have " . count($rpids) . " open <a href='dashboard.php#projects'>request(s) to join a project</a>.</p>";
+  //  }
 
 } else {
 
@@ -106,16 +121,6 @@ if (! isset($pids) || is_null($pids) || count($pids) < 1) {
   print "<table id=\"projects\" class=\"display\">\n";
   print "<thead>\n";
   print "<tr><th>Project</th><th>Purpose</th><th>Project Lead</th><th>Join</th></tr>\n";
-  $jointhis_url = "join-this-project.php?project_id=";
-  $project_details = lookup_project_details($sa_url, $user, $pids);
-  usort($project_details, "project_name_compare");
-  //  error_log("PROJ_DETAILS = " . print_r($project_details, true));
-
-  $ma_url = get_first_service_of_type(SR_SERVICE_TYPE::MEMBER_AUTHORITY);
-  $member_names = lookup_member_names_for_rows($ma_url, $user, 
-					       $project_details, 
-					       PA_PROJECT_TABLE_FIELDNAME::LEAD_ID);
-  //  error_log("MEMBER_DETAILS = " . print_r($member_names, true));
 
   print "</thead><tbody>\n";
 

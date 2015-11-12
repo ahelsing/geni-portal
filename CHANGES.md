@@ -7,6 +7,11 @@
 * `get_project` uses wrong variable name for result. `lookup_project_details`
   should bail when given empty list of projet UIDs.
   ([#1639](https://github.com/GENI-NSF/geni-portal/issues/1639))
+* Refactor Join a Project page.
+  * Do not filter out projects you are in or have requested to join,
+    relying on join-this-project to do so.
+  * Get project details and project lead names before showing page header.
+  ([#1641](https://github.com/GENI-NSF/geni-portal/issues/1641))
 
 # [Release 3.7](https://github.com/GENI-NSF/geni-portal/milestones/3.7)
 
